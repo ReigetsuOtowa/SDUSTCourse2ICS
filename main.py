@@ -1,4 +1,4 @@
-# 胶澳地区青岛特别市经济技术开发区西南辛安矿业高等学校 简易课表转换ical
+# 胶澳地区青岛特别市经济技术开发区西南辛安矿业高等学校 课表转换ics API版
 # By 冷月おとわ
 
 import AcademicAffairs
@@ -7,7 +7,7 @@ import datetime
 import pytz
 from icalendar import Calendar, Event
 
-# 强智教务管理系统
+# 强智教务管理系统用户信息
 ########################################
 account = ""
 password = ""
@@ -47,7 +47,19 @@ def addCourse(course, cal):
     # 新建课程并输入基本信息
     event = Event()
     event.add('summary', course['kcmc']) # 课程名称，作summary字段
-    event.add('DESCRIPTION', course['jsmc'] + ' ' + course['jsxm']) # 教室名称 + 教师姓名，仿WakeUp课程表DESCRPITION字段
+
+    if course['jsmc'] != None and course['jsxm'] != None: # 教室名称字段及教师姓名字段均非空，正常处理
+        event.add('LOCATION', course['jsmc'] + ' ' + course['jsxm']) # 教室名称 + 教师姓名，仿WakeUp课程表LOCATION字段
+        event.add('DESCRPITION', '第' + course['kkzc'] + '周 ' + course['jsmc'] + ' ' + course['jsxm']) # 开课周次 + 教室名称 + 教师姓名，仿WakeUp课程表DESCRPITION字段
+    elif course['jsmc'] == None and course['jsxm'] != None: # 教室名称字段为空，教师姓名字段非空，仅保留教师姓名
+        event.add('LOCATION', course['jsxm']) # 教师姓名，仿WakeUp课程表LOCATION字段
+        event.add('DESCRPITION', '第' + course['kkzc'] + '周 ' + course['jsxm']) # 开课周次 + 教师姓名，仿WakeUp课程表DESCRPITION字段
+    elif course['jsmc'] != None and course['jsxm'] == None: # 教室名称字段非空，教师姓名字段为空，仅保留教室名称
+        event.add('LOCATION', course['jsmc']) # 教室名称，仿WakeUp课程表LOCATION字段
+        event.add('DESCRPITION', '第' + course['kkzc'] + '周 ' + course['jsmc']) # 开课周次 + 教室名称，仿WakeUp课程表DESCRPITION字段
+    elif course['jsmc'] == None and course['jsxm'] == None: # 教室名称字段和教师姓名字段均空，垃圾课程没救了，希望它能1000年生きてる
+        event.add('LOCATION', "生き汚く生きて 何かを創ったらあなたの気持ちが１０００年生きられるかも しれないから") # 摘自1000年生きてる / いよわ feat.初音ミク（living millennium / Iyowa feat.Hatsune Miku） 直达链接：https://www.youtube.com/watch?v=3em-J9yYPAo
+        event.add('DESCRPITION', "生き汚く生きて 何かを創ったらあなたの気持ちが１０００年生きられるかも しれないから") # 摘自1000年生きてる / いよわ feat.初音ミク（living millennium / Iyowa feat.Hatsune Miku） 直达链接：https://www.youtube.com/watch?v=3em-J9yYPAo
 
     # 切分课程开始时间、结束时间字符串为小时及分钟
     start_time_str = course['kssj']
@@ -75,7 +87,6 @@ if __name__ == "__main__":
     account = input("请输入您的黄岛科技大学教务账号：")
     password = input("请输入您的黄岛科技大学教务账号密码：")
 
-
     Q = AcademicAffairs.SW(account, password, url)
 
     date = startTermDate(Q) # 推演第1周周一，即开学时间，作为后续操作的基准时间
@@ -83,8 +94,12 @@ if __name__ == "__main__":
 
     cal = Calendar() # 创建一个日历
 
-    # 遍历各周(1周-20周)，创建相应时间，并加入日历
-    for i in range(1, 21):
+    # 选择生成的课表周数
+    start = int(input("请输入您想生成的课表起始周："))
+    end = int(input("请输入您想生成的课表结束周："))
+
+    # 遍历各周(start周-end周)，创建相应课程，并加入日历
+    for i in range(start, end + 1):
         data_json = Q.get_class_info(i) # 读取第i周的课程JSON文本文件
         data = json.loads(data_json) # JSON字符串解释为List
 
