@@ -18,8 +18,8 @@ url = "http://jwgl.sdust.edu.cn/app.do"
 class CoursesAPI(object):
     def __init__(self): # 类进入接口
         # 输入账号密码信息
-        account = input("请输入您的黄岛科技大学教务账号：")
-        password = input("请输入您的黄岛科技大学教务账号密码：")
+        account = input("请输入您的黄岛科技大学教务账号: ")
+        password = input("请输入您的黄岛科技大学教务账号密码: ")
 
         Q = AcademicAffairs.SW(account, password, url)
 
@@ -29,12 +29,14 @@ class CoursesAPI(object):
         cal = Calendar() # 创建一个日历
 
         # 选择生成的课表周数
-        start = int(input("请输入您想生成的课表起始周："))
-        end = int(input("请输入您想生成的课表结束周："))
+        start = int(input("\n请输入您想生成的课表起始周: "))
+        end = int(input("请输入您想生成的课表结束周: "))
 
         # 遍历各周(start周-end周)，创建相应课程，并加入日历
         for i in range(start, end + 1):
             date = startDate + datetime.timedelta(days = (i - 1) * 7) # 当前遍历周次基准时间为当前周周一
+
+            print("\n第{}周开始创建".format(i))
 
             data_json = Q.get_class_info(i) # 读取第i周的课程JSON文本文件
             data = json.loads(data_json) # JSON字符串解释为List
@@ -50,13 +52,13 @@ class CoursesAPI(object):
         # 生成.ics文件
         with open('MyCourse.ics', 'wb') as f:
             f.write(cal.to_ical())
-            print(".ics文件生成完成")
+            print("\n.ics文件生成完成")
 
     # 推演当前学期开学时间（以第1周周一为基准）
     def startTermDate(self, Q):
         data_json = Q.get_current_time() # 获取当前周次信息，以JSON字符串存储
 
-        data = json.loads(data_json) # 解析JSON字符串为字典
+        data = json.loads(data_json) # 解析JSON字符串为List
 
         # 解析当前周开始日期
         start_date_str = data['s_time']  # 获取开始日期的字符串表示
@@ -75,8 +77,8 @@ class CoursesAPI(object):
         first_week_monday = start_datetime - datetime.timedelta(days = days_to_subtract)  # 计算第1周周一的日期
 
         # 输出提示信息
-        print("当前读取的学期是:", data['xnxqh'])
-        print("当前学期开学时间(第1周周一)为:", first_week_monday)
+        print("\n当前读取的学期是: ", data['xnxqh'])
+        print("当前学期开学时间(第1周周一)为: ", first_week_monday)
 
         return first_week_monday
     
@@ -88,13 +90,13 @@ class CoursesAPI(object):
 
         if course['jsmc'] != None and course['jsxm'] != None: # 教室名称字段及教师姓名字段均非空，正常处理
             event.add('LOCATION', course['jsmc'] + ' ' + course['jsxm']) # 教室名称 + 教师姓名，仿WakeUp课程表LOCATION字段
-            event.add('DESCRIPTION', '第' + course['kkzc'] + '周 ' + course['jsmc'] + ' ' + course['jsxm']) # 开课周次 + 教室名称 + 教师姓名，仿WakeUp课程表DESCRIPTION字段
+            event.add('DESCRIPTION', course['kkzc'] + '周 ' + course['jsmc'] + ' ' + course['jsxm']) # 开课周次 + 教室名称 + 教师姓名，仿WakeUp课程表DESCRIPTION字段
         elif course['jsmc'] == None and course['jsxm'] != None: # 教室名称字段为空，教师姓名字段非空，仅保留教师姓名
             event.add('LOCATION', course['jsxm']) # 教师姓名，仿WakeUp课程表LOCATION字段
-            event.add('DESCRIPTION', '第' + course['kkzc'] + '周 ' + course['jsxm']) # 开课周次 + 教师姓名，仿WakeUp课程表DESCRIPTION字段
+            event.add('DESCRIPTION', course['kkzc'] + '周 ' + course['jsxm']) # 开课周次 + 教师姓名，仿WakeUp课程表DESCRIPTION字段
         elif course['jsmc'] != None and course['jsxm'] == None: # 教室名称字段非空，教师姓名字段为空，仅保留教室名称
             event.add('LOCATION', course['jsmc']) # 教室名称，仿WakeUp课程表LOCATION字段
-            event.add('DESCRIPTION', '第' + course['kkzc'] + '周 ' + course['jsmc']) # 开课周次 + 教室名称，仿WakeUp课程表DESCRIPTION字段
+            event.add('DESCRIPTION', course['kkzc'] + '周 ' + course['jsmc']) # 开课周次 + 教室名称，仿WakeUp课程表DESCRIPTION字段
         elif course['jsmc'] == None and course['jsxm'] == None: # 教室名称字段和教师姓名字段均空，垃圾课程没救了，希望它能1000年生きてる
             event.add('LOCATION', "生き汚く生きて 何かを創ったらあなたの気持ちが１０００年生きられるかも しれないから") # 摘自1000年生きてる / いよわ feat.初音ミク（living millennium / Iyowa feat.Hatsune Miku） 直达链接：https://www.youtube.com/watch?v=3em-J9yYPAo
             event.add('DESCRIPTION', "生き汚く生きて 何かを創ったらあなたの気持ちが１０００年生きられるかも しれないから") # 摘自1000年生きてる / いよわ feat.初音ミク（living millennium / Iyowa feat.Hatsune Miku） 直达链接：https://www.youtube.com/watch?v=3em-J9yYPAo
