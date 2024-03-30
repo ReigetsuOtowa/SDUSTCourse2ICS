@@ -23,7 +23,7 @@ class CoursesAPI(object):
 
         Q = AcademicAffairs.SW(account, password, url)
 
-        startDate = self.startTermDate(Q) # 推演第1周周一，即开学时间，作为后续操作的基准时间
+        start_date = self.startTermDate(Q) # 推演第1周周一，即开学时间，作为后续操作的基准时间
         date_now = datetime.datetime.now(tz = pytz.timezone('Asia/Shanghai')) # 获取现在本机时间，用于创建DTSTAMP时间戳
 
         cal = Calendar() # 创建一个日历
@@ -34,7 +34,7 @@ class CoursesAPI(object):
 
         # 遍历各周(start周-end周)，创建相应课程，并加入日历
         for i in range(start, end + 1):
-            date = startDate + datetime.timedelta(days = (i - 1) * 7) # 当前遍历周次基准时间为当前周周一
+            date = start_date + datetime.timedelta(days = (i - 1) * 7) # 当前遍历周次基准时间为当前周周一
 
             print("\n第{}周开始创建".format(i))
 

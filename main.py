@@ -19,7 +19,7 @@ if __name__ == "__main__":
         CoursesAPI2ICS.CoursesAPI()
     elif flag == 2:
         print("\n即将使用强智教务课表Excel文件生成课表.ics文件")
-        print("工事中,预计将和愚人节打复活赛")
+        print("警告：含有单双周课程的课表暂时无法使用此方式")
         CoursesExcel2ICS.CoursesExcel()
     elif flag == 3:
         print("\n即将使用使用使用强智教务系统网页登录生成课表.ics文件")
