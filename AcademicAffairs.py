@@ -14,7 +14,7 @@ import datetime
 
 class SW(object):
     """docstring for SW"""
-    def __init__(self, account, password,url):
+    def __init__(self, account, password, url):
         super(SW, self).__init__()
         self.url = url
         self.account = account
