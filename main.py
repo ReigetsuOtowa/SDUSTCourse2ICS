@@ -43,23 +43,23 @@ def startTermDate(Q):
     return first_week_monday
 
 # 创建课程对应的日历事件，并加入到cal日历中
-def addCourse(course, cal):
+def addCourse(date, date_now, course, cal):
     # 新建课程并输入基本信息
     event = Event()
     event.add('summary', course['kcmc']) # 课程名称，作summary字段
 
     if course['jsmc'] != None and course['jsxm'] != None: # 教室名称字段及教师姓名字段均非空，正常处理
         event.add('LOCATION', course['jsmc'] + ' ' + course['jsxm']) # 教室名称 + 教师姓名，仿WakeUp课程表LOCATION字段
-        event.add('DESCRPITION', '第' + course['kkzc'] + '周 ' + course['jsmc'] + ' ' + course['jsxm']) # 开课周次 + 教室名称 + 教师姓名，仿WakeUp课程表DESCRPITION字段
+        event.add('DESCRIPTION', '第' + course['kkzc'] + '周 ' + course['jsmc'] + ' ' + course['jsxm']) # 开课周次 + 教室名称 + 教师姓名，仿WakeUp课程表DESCRIPTION字段
     elif course['jsmc'] == None and course['jsxm'] != None: # 教室名称字段为空，教师姓名字段非空，仅保留教师姓名
         event.add('LOCATION', course['jsxm']) # 教师姓名，仿WakeUp课程表LOCATION字段
-        event.add('DESCRPITION', '第' + course['kkzc'] + '周 ' + course['jsxm']) # 开课周次 + 教师姓名，仿WakeUp课程表DESCRPITION字段
+        event.add('DESCRIPTION', '第' + course['kkzc'] + '周 ' + course['jsxm']) # 开课周次 + 教师姓名，仿WakeUp课程表DESCRIPTION字段
     elif course['jsmc'] != None and course['jsxm'] == None: # 教室名称字段非空，教师姓名字段为空，仅保留教室名称
         event.add('LOCATION', course['jsmc']) # 教室名称，仿WakeUp课程表LOCATION字段
-        event.add('DESCRPITION', '第' + course['kkzc'] + '周 ' + course['jsmc']) # 开课周次 + 教室名称，仿WakeUp课程表DESCRPITION字段
+        event.add('DESCRIPTION', '第' + course['kkzc'] + '周 ' + course['jsmc']) # 开课周次 + 教室名称，仿WakeUp课程表DESCRIPTION字段
     elif course['jsmc'] == None and course['jsxm'] == None: # 教室名称字段和教师姓名字段均空，垃圾课程没救了，希望它能1000年生きてる
         event.add('LOCATION', "生き汚く生きて 何かを創ったらあなたの気持ちが１０００年生きられるかも しれないから") # 摘自1000年生きてる / いよわ feat.初音ミク（living millennium / Iyowa feat.Hatsune Miku） 直达链接：https://www.youtube.com/watch?v=3em-J9yYPAo
-        event.add('DESCRPITION', "生き汚く生きて 何かを創ったらあなたの気持ちが１０００年生きられるかも しれないから") # 摘自1000年生きてる / いよわ feat.初音ミク（living millennium / Iyowa feat.Hatsune Miku） 直达链接：https://www.youtube.com/watch?v=3em-J9yYPAo
+        event.add('DESCRIPTION', "生き汚く生きて 何かを創ったらあなたの気持ちが１０００年生きられるかも しれないから") # 摘自1000年生きてる / いよわ feat.初音ミク（living millennium / Iyowa feat.Hatsune Miku） 直达链接：https://www.youtube.com/watch?v=3em-J9yYPAo
 
     # 切分课程开始时间、结束时间字符串为小时及分钟
     start_time_str = course['kssj']
@@ -75,7 +75,7 @@ def addCourse(course, cal):
     # 添加该课程的时间信息
     event.add('dtstart', course_start_date)
     event.add('dtend', course_end_date)
-    event.add('dtstamp', dt_now)
+    event.add('dtstamp', date_now)
 
     # 将课程添加到日历中，并给与提示
     cal.add_component(event)
@@ -89,8 +89,8 @@ if __name__ == "__main__":
 
     Q = AcademicAffairs.SW(account, password, url)
 
-    date = startTermDate(Q) # 推演第1周周一，即开学时间，作为后续操作的基准时间
-    dt_now = datetime.datetime.now(tz = pytz.timezone('Asia/Shanghai')) # 获取现在本机时间，用于创建DTSTAMP时间戳
+    startDate = startTermDate(Q) # 推演第1周周一，即开学时间，作为后续操作的基准时间
+    date_now = datetime.datetime.now(tz = pytz.timezone('Asia/Shanghai')) # 获取现在本机时间，用于创建DTSTAMP时间戳
 
     cal = Calendar() # 创建一个日历
 
@@ -100,17 +100,18 @@ if __name__ == "__main__":
 
     # 遍历各周(start周-end周)，创建相应课程，并加入日历
     for i in range(start, end + 1):
+        date = startDate + datetime.timedelta(days = (i - 1) * 7) # 当前遍历周次基准时间为当前周周一
+
         data_json = Q.get_class_info(i) # 读取第i周的课程JSON文本文件
         data = json.loads(data_json) # JSON字符串解释为List
 
         if data != [None]: # 若当前周存在课程才添加课程
             for course in data:
-                addCourse(course, cal)
+                addCourse(date, date_now, course, cal)
         else:
             print("该周课程为空")
         
         print("第{}周创建完毕".format(i))
-        date = date + datetime.timedelta(days = 7) # 基准时间改为下一周周一
 
     # 生成.ics文件
     with open('MyCourse.ics', 'wb') as f:
